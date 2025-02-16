@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Works Streak Tracker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #fff;
+      width: 90%;
+      max-width: 500px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .daily-work-section {
+      margin: 20px 0;
+    }
+    label {
+      font-size: 1.2rem;
+      display: block;
+      margin: 20px 0;
+      cursor: pointer;
+    }
+    input[type="checkbox"] {
+      transform: scale(1.5);
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    button {
+      background: #0077cc;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin: 5px;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+    #achievement-label {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: #007700;
+      margin: 15px 0;
+    }
+    .banner {
+      background: #ffeb3b;
+      padding: 10px;
+      font-weight: bold;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="banner" id="banner-message">
+      Let’s boost that testosterone!
+    </div>
+    <h1>Daily Streak Tracker</h1>
+    
+    <div class="daily-work-section">
+      <label>
+        <input type="checkbox" id="daily-checkbox" />
+        YOUR DAILY WORKS
+      </label>
+      <button type="button" id="complete-button">Mark Day Complete</button>
+    </div>
+    
+    <div class="streak-section">
+      <h2>Streak: <span id="streak-count">0</span> day(s)</h2>
+      <p id="achievement-label">Keep it up!</p>
+    </div>
+    
+    <div class="reset-section">
+      <button type="button" id="reset-button">Reset Streak</button>
+    </div>
+  </div>
+
+  <script>
+    // Helper functions to get date strings in YYYY-MM-DD format
+    function getTodayString() {
+      const today = new Date();
+      return today.toISOString().split('T')[0];
+    }
+
+    function getYesterdayString() {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      return yesterday.toISOString().split('T')[0];
+    }
+
+    // DOM elements
+    const dailyCheckbox = document.getElementById('daily-checkbox');
+    const completeButton = document.getElementById('complete-button');
+    const resetButton = document.getElementById('reset-button');
+    const streakCountEl = document.getElementById('streak-count');
+    const achievementLabelEl = document.getElementById('achievement-label');
+    const bannerMessageEl = document.getElementById('banner-message');
+
+    // Retrieve stored streak and last completion date
+    let streak = parseInt(localStorage.getItem('streak')) || 0;
+    let lastCompletedDate = localStorage.getItem('lastCompletedDate');
+
+    // Function to update achievement label based on streak
+    function updateAchievement() {
+      if (streak >= 50) {
+        achievementLabelEl.textContent = "You're a MEN THAT HANDLES PROPERLY!";
+        achievementLabelEl.style.color = "#b22222";
+      } else if (streak >= 21) {
+        achievementLabelEl.textContent = "Congratulations, you're a man!";
+        achievementLabelEl.style.color = "#228b22";
+      } else {
+        achievementLabelEl.textContent = "You're still a child – keep going!";
+        achievementLabelEl.style.color = "#555";
+      }
+    }
+
+    // Function to update UI elements based on current data
+    function updateUI() {
+      streakCountEl.textContent = streak;
+      updateAchievement();
+
+      const today = getTodayString();
+      // If the stored last completed date is today, mark checkbox as completed and disable it
+      if (lastCompletedDate === today) {
+        dailyCheckbox.checked = true;
+        dailyCheckbox.disabled = true;
+      } else {
+        dailyCheckbox.checked = false;
+        dailyCheckbox.disabled = false;
+      }
+    }
+
+    // Call updateUI on load
+    updateUI();
+
+    // Function to handle marking the day complete
+    completeButton.addEventListener('click', () => {
+      const today = getTodayString();
+
+      // If already completed today, do nothing
+      if (lastCompletedDate === today) {
+        alert("Today's work is already marked complete!");
+        return;
+      }
+
+      // If the checkbox is checked, proceed. Otherwise, prompt the user.
+      if (!dailyCheckbox.checked) {
+        if (!confirm("Have you completed YOUR DAILY WORKS? Please check the box if so.")) {
+          return;
+        }
+      }
+
+      // Check if yesterday was completed for consecutive streak
+      const yesterday = getYesterdayString();
+      if (lastCompletedDate === yesterday || !lastCompletedDate) {
+        // If yesterday was completed or this is the first day, increment streak
+        streak = lastCompletedDate ? streak + 1 : 1;
+      } else {
+        // Missed a day – start a new streak
+        streak = 1;
+      }
+
+      // Save today's completion and streak
+      lastCompletedDate = today;
+      localStorage.setItem('lastCompletedDate', today);
+      localStorage.setItem('streak', streak);
+
+      // Update UI and show banner message
+      updateUI();
+      bannerMessageEl.textContent = "Testosterone Boosted! Day marked complete.";
+      bannerMessageEl.style.background = "#c8e6c9";
+    });
+
+    // Reset streak button
+    resetButton.addEventListener('click', () => {
+      if (confirm("Are you sure you want to reset your streak?")) {
+        streak = 0;
+        lastCompletedDate = null;
+        localStorage.removeItem('streak');
+        localStorage.removeItem('lastCompletedDate');
+        updateUI();
+        bannerMessageEl.textContent = "Let's boost that testosterone!";
+        bannerMessageEl.style.background = "#ffeb3b";
+      }
+    });
+
+    // Optional: Check every minute if the day has changed and update UI accordingly.
+    setInterval(() => {
+      const today = getTodayString();
+      if (lastCompletedDate !== today) {
+        // Reset the checkbox if a new day has started.
+        dailyCheckbox.checked = false;
+        dailyCheckbox.disabled = false;
+      }
+    }, 60000);
+  </script>
+</body>
+</html>
